@@ -10,6 +10,8 @@ Utility functions related to point cloud
 import open3d as o3d
 import numpy as np
 
+import hdbscan
+
 
 def pcd_to_np(pcd_file):
     """
@@ -201,3 +203,31 @@ def downsample_lidar_minimum(pcd_np_list):
         pcd_np_list[i] = downsample_lidar(pcd_np, minimum)
 
     return pcd_np_list
+
+
+def clusters_hdbscan(points_set, n_clusters=50):
+    clusterer = hdbscan.HDBSCAN(algorithm='best', alpha=1., approx_min_span_tree=True,
+                                gen_min_span_tree=True, leaf_size=100,
+                                metric='euclidean', min_cluster_size=20, min_samples=None
+                            )
+
+    clusterer.fit(points_set)
+
+    labels = clusterer.labels_.copy()
+
+    lbls, counts = np.unique(labels, return_counts=True)
+    cluster_info = np.array(list(zip(lbls[1:], counts[1:])))
+    cluster_info = cluster_info[cluster_info[:,1].argsort()]
+
+    clusters_labels = cluster_info[::-1][:n_clusters, 0]
+    labels[np.in1d(labels, clusters_labels, invert=True)] = -1
+
+    return labels
+
+def clusterize_pcd(points):
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points[:, :3])
+
+    labels_ = np.expand_dims(clusters_hdbscan(np.asarray(pcd.points)), axis=-1)
+
+    return labels_

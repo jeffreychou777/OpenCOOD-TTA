@@ -63,6 +63,39 @@ def load_saved_model(saved_path, model):
 
     return initial_epoch, model
 
+def load_pretrained_model(saved_path, model):
+    """
+    Load saved model if exiseted
+
+    Parameters
+    __________
+    saved_path : str
+       model saved path
+    model : opencood object
+        The model instance.
+
+    Returns
+    -------
+    model : opencood object
+        The model instance loaded pretrained params.
+    """
+    assert os.path.exists(saved_path), '{} not found'.format(saved_path)
+
+    model_file = saved_path
+    print('load pretrained model by {}'.format(model_file) )
+    checkpoint = torch.load(
+        model_file,
+        map_location='cpu')
+    # for param_tensor in checkpoint: # 字典的遍历默认是遍历 key，所以param_tensor实际上是键值
+    #     print(param_tensor,'\t',checkpoint[param_tensor].size())
+    # print('###############################')
+    # for param_tensor in model.state_dict(): # 字典的遍历默认是遍历 key，所以param_tensor实际上是键值
+    #     print(param_tensor,'\t',model.state_dict()[param_tensor].size())
+    # print('###############################')
+    model.load_state_dict(checkpoint, strict=False)
+    del checkpoint
+
+    return model
 
 def setup_train(hypes):
     """
