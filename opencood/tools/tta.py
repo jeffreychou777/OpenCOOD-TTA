@@ -139,7 +139,6 @@ def main():
 
         for i, batch_data in enumerate(train_loader):
             # the model will be evaluation mode during validation
-            print(111111111111)
             model.train()
             model.zero_grad()
             optimizer.zero_grad()

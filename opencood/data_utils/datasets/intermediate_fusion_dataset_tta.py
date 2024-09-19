@@ -184,7 +184,10 @@ class IntermediateFusionDatasetTTA(basedataset.BaseDataset):
 
         # pre-process the lidar to voxel/bev/downsampled lidar
         print(666666666)
-        processed_lidar = self.pre_processor.preprocess(projected_lidar_list)
+        processed_lidar = []
+        for projected_lidar in projected_lidar_list:
+            processed_lidar.append(self.pre_processor.preprocess([projected_lidar]))
+        # processed_lidar = self.pre_processor.preprocess(projected_lidar_list)
         print(7777777777777)
         cav_num = len(processed_lidar)
         merged_feature_dict = self.merge_features_to_dict(processed_lidar)
