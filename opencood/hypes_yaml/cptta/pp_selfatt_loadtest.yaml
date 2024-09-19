@@ -4,14 +4,14 @@ validate_dir: "dataset/opv2v/validate"
 
 yaml_parser: "load_point_pillar_params"
 train_params:
-  batch_size: &batch_size 1
-  epoches: 15
+  batch_size: &batch_size 2
+  epoches: 1
   eval_freq: 1
   save_freq: 1
 
 fusion:
   core_method: 'IntermediateFusionDataset' # LateFusionDataset, EarlyFusionDataset, IntermediateFusionDataset supported
-  args: []
+  args: []                                
 
 # preprocess-related
 preprocess:
@@ -56,11 +56,13 @@ postprocess:
 
 # model related
 model:
-  core_method: point_pillar_intermediate
+  core_method: point_pillar_intermediate_loadtest
   args:
     voxel_size: *voxel_size
     lidar_range: *cav_lidar
     anchor_number: *achor_num
+
+    saved_path: "/home/zjf/DATACENTER2/data/code/OpenCOOD-TTA/opencood/logs/clean_train"
 
     pillar_vfe:
       use_norm: true

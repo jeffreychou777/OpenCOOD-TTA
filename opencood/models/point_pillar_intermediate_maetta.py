@@ -27,9 +27,10 @@ class PointPillarIntermediateMaetta(nn.Module):
                                     point_cloud_range=args['lidar_range'])
         self.scatter = PointPillarScatter(args['point_pillar_scatter'])
         self.backbone = AttBEVBackbone(args['base_bev_backbone'], 64)
-        self.backbone = train_utils.load_pretrained_model(
-            args["saved_pth"], self.backbone)
-        self.Autoencoder = AutoEncoder()
+        self.teacher_model = copy.deepcopy(self.backbone)
+        self.student_model = copy.deepcopy(self.backbone)
+        self.Autoencoder = AutoEncoder(384, layer_num=1)
+        self.momentum = args["momentum"]
 
         self.cls_head = nn.Conv2d(128 * 3, args['anchor_number'],
                                   kernel_size=1)
@@ -41,13 +42,21 @@ class PointPillarIntermediateMaetta(nn.Module):
             self.dir_head = nn.Conv2d(128 * 3, args['dir_args']['num_bins'] * args['anchor_number'],
                                   kernel_size=1) # BIN_NUM = 2
 
+    @torch.no_grad()
+    def _momentum_update_key_encoder(self):
+        """
+        Momentum update of the query projection
+        """
+        for param_teacher, param_student in zip(self.teacher_model.parameters(), self.student_model.parameters()):
+            param_teacher.data = param_teacher.data * self.momentum + param_student.data * (
+                1.0 - self.momentum
+            )
     def forward(self, data_dict):
-
         voxel_features = data_dict['processed_lidar']['voxel_features']
         voxel_coords = data_dict['processed_lidar']['voxel_coords']
         voxel_num_points = data_dict['processed_lidar']['voxel_num_points']
         record_len = data_dict['record_len']
-        lidar_pose = data_dict['lidar_pose']
+        # lidar_pose = data_dict['lidar_pose']
         pairwise_t_matrix = data_dict['pairwise_t_matrix']
 
         batch_dict = {'voxel_features': voxel_features,
@@ -56,28 +65,35 @@ class PointPillarIntermediateMaetta(nn.Module):
                       'record_len': record_len,
                       'pairwise_t_matrix': pairwise_t_matrix}
             
-
-
         batch_dict = self.pillar_vfe(batch_dict)
         batch_dict = self.scatter(batch_dict)
-        batch_dict_masked = copy.deepcopy(batch_dict)
-        
+        # batch_dict_masked = copy.deepcopy(batch_dict)
+        batch_dict_masked = {k: v.clone() if isinstance(v, torch.Tensor) else v for k, v in batch_dict.items()}
+
+
+            
         # shape of spatial_features:[11,64,200,704]
         batch_dict_masked['spatial_features'] = spatial_mask(batch_dict_masked['spatial_features'], 0.5, 'random') 
         
+        with torch.no_grad():
+            self._momentum_update_key_encoder()
+            batch_dict_masked = self.teacher_model(batch_dict_masked)
+            
+        batch_dict = self.student_model(batch_dict)
         
-        batch_dict = self.backbone(batch_dict)
-        batch_dict_masked = self.backbone(batch_dict_masked)
+        
         spatial_features_2d = batch_dict['spatial_features_2d']
         spatial_features_2d_masked = batch_dict_masked['spatial_features_2d']
-        spatial_features_2d_rec = self.Autoencoder(spatial_features_2d_masked)
+        # spatial_features_2d_rec = self.Autoencoder(spatial_features_2d_masked)
 
 
-        # psm = self.cls_head(spatial_features_2d)
-        # rm = self.reg_head(spatial_features_2d)
+        psm = self.cls_head(spatial_features_2d)
+        rm = self.reg_head(spatial_features_2d)
 
         output_dict = {'fused_feature_org': spatial_features_2d,
-                       'fused_feature_rec': spatial_features_2d_rec,
+                       'fused_feature_rec': spatial_features_2d_masked,
+                       'psm': psm,
+                       'rm': rm,
                        }
         
         if self.use_dir:

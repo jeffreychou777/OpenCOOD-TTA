@@ -13,10 +13,10 @@ noise_setting:
 
 yaml_parser: "load_point_pillar_params"
 train_params:
-  batch_size: &batch_size 1
-  epoches: 5
-  eval_freq: 2
-  save_freq: 2
+  batch_size: &batch_size 2
+  epoches: 1
+  eval_freq: 1
+  save_freq: 1
   max_cav: &max_cav 5
 
 input_source: ['lidar']
@@ -25,7 +25,7 @@ label_type: 'lidar'
 comm_range: 70
 
 fusion:
-  core_method: 'IntermediateFusionDatasetV3' # LateFusionDataset, EarlyFusionDataset, IntermediateFusionDataset supported
+  core_method: 'IntermediateFusionDataset' # LateFusionDataset, EarlyFusionDataset, IntermediateFusionDataset supported
   args: 
     same_data: false
     full_data: true
@@ -64,7 +64,7 @@ postprocess:
     w: 1.6
     h: 1.56
     r: &anchor_yaw [0, 90]
-    feature_stride: 2
+    feature_stride: 4
     num: &anchor_num 2
   target_args:
     pos_threshold: 0.6
@@ -86,7 +86,9 @@ model:
     lidar_range: *cav_lidar
     anchor_number: *anchor_num
 
-    saved_path: "/home/zjf/DATACENTER2/data/code/CPTTA/opencood/logs/opv2v_selatt_clean_pretrain/net_epoch19.pth"
+    momentum: 0.8
+
+    saved_path: "/home/zjf/DATACENTER2/data/code/OpenCOOD-TTA/opencood/logs/clean_train"
     pillar_vfe:
       use_norm: true
       with_distance: false
@@ -112,7 +114,7 @@ loss:
 
 optimizer:
   core_method: Adam
-  lr: 0.001
+  lr: 0.0001
   args:
     eps: 1e-10
     weight_decay: 1e-4

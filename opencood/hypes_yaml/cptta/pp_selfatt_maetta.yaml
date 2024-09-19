@@ -4,8 +4,8 @@ validate_dir: "dataset/opv2v/validate"
 
 yaml_parser: "load_point_pillar_params"
 train_params:
-  batch_size: &batch_size 1
-  epoches: 15
+  batch_size: &batch_size 2
+  epoches: 1
   eval_freq: 1
   save_freq: 1
 
@@ -56,8 +56,12 @@ postprocess:
 
 # model related
 model:
-  core_method: point_pillar_intermediate
+  core_method: point_pillar_intermediate_maetta
   args:
+    
+    saved_path: '/home/zjf/DATACENTER2/data/code/OpenCOOD-TTA/opencood/logs/clean_train'
+    momentum: 0.8
+
     voxel_size: *voxel_size
     lidar_range: *cav_lidar
     anchor_number: *achor_num
@@ -81,14 +85,14 @@ model:
     anchor_num: *achor_num
 
 loss:
-  core_method: point_pillar_loss
+  core_method: autoencoder_loss
   args:
     cls_weight: 1.0
     reg: 2.0
 
 optimizer:
   core_method: Adam
-  lr: 0.002
+  lr: 0.001
   args:
     eps: 1e-10
     weight_decay: 1e-4

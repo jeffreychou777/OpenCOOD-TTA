@@ -8,6 +8,7 @@ from opencood.data_utils.datasets.intermediate_fusion_dataset import Intermediat
 from opencood.data_utils.datasets.intermediate_fusion_dataset_v2 import IntermediateFusionDatasetV2
 from opencood.data_utils.datasets.intermediate_fusion_dataset_v3 import IntermediateFusionDatasetV3
 from opencood.data_utils.datasets.intermediate_fusion_dataset_v4 import IntermediateFusionDatasetV4
+from opencood.data_utils.datasets.intermediate_fusion_dataset_tta import IntermediateFusionDatasetTTA
 
 __all__ = {
     'LateFusionDataset': LateFusionDataset,
@@ -16,6 +17,7 @@ __all__ = {
     'IntermediateFusionDatasetV2': IntermediateFusionDatasetV2,
     'IntermediateFusionDatasetV3': IntermediateFusionDatasetV3,
     'IntermediateFusionDatasetV4': IntermediateFusionDatasetV4,
+    'IntermediateFusionDatasetTTA': IntermediateFusionDatasetTTA
 }
 
 # the final range for evaluation
@@ -30,7 +32,8 @@ def build_dataset(dataset_cfg, visualize=False, train=True):
                     f"Please add your processor file's name in opencood/" \
                     f"data_utils/datasets/init.py"
     assert dataset_name in ['LateFusionDataset', 'EarlyFusionDataset',
-                            'IntermediateFusionDataset', 'IntermediateFusionDatasetV2','IntermediateFusionDatasetV3','IntermediateFusionDatasetV4'], error_message
+                            'IntermediateFusionDataset', 'IntermediateFusionDatasetV2',
+                            'IntermediateFusionDatasetV3','IntermediateFusionDatasetV4', 'IntermediateFusionDatasetTTA'], error_message
 
     dataset = __all__[dataset_name](
         params=dataset_cfg,

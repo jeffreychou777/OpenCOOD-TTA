@@ -79,6 +79,7 @@ def main():
     print('---------------Creating Model------------------')
     model = train_utils.create_model(hypes)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    _, model = train_utils.load_saved_model(hypes["model"]['args']["saved_path"], model)
     # if we want to train from last checkpoint.
     if opt.model_dir:
         saved_path = opt.model_dir
@@ -138,6 +139,7 @@ def main():
 
         for i, batch_data in enumerate(train_loader):
             # the model will be evaluation mode during validation
+            print(111111111111)
             model.train()
             model.zero_grad()
             optimizer.zero_grad()
@@ -168,6 +170,7 @@ def main():
 
             if not opt.half:
                 final_loss.backward()
+                print(222222222)
                 optimizer.step()
             else:
                 scaler.scale(final_loss).backward()

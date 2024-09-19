@@ -61,6 +61,7 @@ class BaseDataset(Dataset):
         self.params = params
         self.visualize = visualize
         self.train = train
+        self.scenario_folders_name=[]
 
         self.pre_processor = None
         self.post_processor = None
@@ -119,6 +120,9 @@ class BaseDataset(Dataset):
         scenario_folders = sorted([os.path.join(root_dir, x)
                                    for x in os.listdir(root_dir) if
                                    os.path.isdir(os.path.join(root_dir, x))])
+        
+        self.scenario_folders_name=scenario_folders
+
         # Structure: {scenario_id : {cav_1 : {timestamp1 : {yaml: path,
         # lidar: path, cameras:list of path}}}}
         self.scenario_database = OrderedDict()
@@ -234,7 +238,6 @@ class BaseDataset(Dataset):
         # calculate distance to ego for each cav
         ego_cav_content = \
             self.calc_dist_to_ego(scenario_database, timestamp_key)
-
         data = OrderedDict()
         # load files for all CAVs
         for cav_id, cav_content in scenario_database.items():
@@ -260,6 +263,7 @@ class BaseDataset(Dataset):
                                                        cur_ego_pose_flag)
             data[cav_id]['lidar_np'] = \
                 pcd_utils.pcd_to_np(cav_content[timestamp_key_delay]['lidar'])
+            data[cav_id]['scenario_path']=f'{self.scenario_folders_name[scenario_index]}/{timestamp_key_delay}'
         return data
 
     @staticmethod
@@ -614,6 +618,22 @@ class BaseDataset(Dataset):
         self.post_processor.visualize(pred_box_tensor,
                                       gt_tensor,
                                       pcd,
+                                      show_vis,
+                                      save_path,
+                                      dataset=dataset)
+        
+    def visualize_result_v2(self, pred_box_tensor,
+                         gt_tensor,
+                         pcd,
+                         seg,
+                         show_vis,
+                         save_path,
+                         dataset=None):
+        # visualize the model output
+        self.post_processor.visualizev2(pred_box_tensor,
+                                      gt_tensor,
+                                      pcd,
+                                      seg,
                                       show_vis,
                                       save_path,
                                       dataset=dataset)

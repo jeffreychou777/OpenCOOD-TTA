@@ -86,13 +86,43 @@ def load_pretrained_model(saved_path, model):
     checkpoint = torch.load(
         model_file,
         map_location='cpu')
-    # for param_tensor in checkpoint: # 字典的遍历默认是遍历 key，所以param_tensor实际上是键值
-    #     print(param_tensor,'\t',checkpoint[param_tensor].size())
-    # print('###############################')
-    # for param_tensor in model.state_dict(): # 字典的遍历默认是遍历 key，所以param_tensor实际上是键值
-    #     print(param_tensor,'\t',model.state_dict()[param_tensor].size())
-    # print('###############################')
-    model.load_state_dict(checkpoint, strict=False)
+
+    # 获取模型的当前状态字典
+    model_dict = model.state_dict()
+
+    # 创建一个新的字典来保存修改后的 checkpoint 参数
+    new_checkpoint = {}
+
+    # 遍历 checkpoint 并修改参数名称
+    for k, v in checkpoint.items():
+        # 检查是否需要重命名
+        if 'backbone.blocks' in k:
+            # 将 'backbone.blocks.1.' 替换为 'block1.'
+            new_key = k.replace('backbone.', '', 1)
+            # 加入新的字典
+            new_checkpoint[new_key] = v
+        elif 'pillar_vfe' in k:
+            # 将 'backbone.' 替换为 ''
+            new_key = k.replace('pillar_vfe..', '', 1)
+            # 加入新的字典
+            new_checkpoint[new_key] = v
+        else:
+            # 如果不需要修改的参数，保持不变
+            new_checkpoint[k] = v
+
+    # 更新模型的字典，将修改后的参数加载进来
+    model_dict.update(new_checkpoint)
+
+    # 加载更新后的状态字典到模型3
+    model.load_state_dict(new_checkpoint, strict=False)
+        
+    for param_tensor in new_checkpoint: # 字典的遍历默认是遍历 key，所以param_tensor实际上是键值
+        print(param_tensor,'\t',new_checkpoint[param_tensor].size())
+    print('###############################')
+    for param_tensor in model.state_dict(): # 字典的遍历默认是遍历 key，所以param_tensor实际上是键值
+        print(param_tensor,'\t',model.state_dict()[param_tensor].size())
+    print('###############################')
+    
     del checkpoint
 
     return model

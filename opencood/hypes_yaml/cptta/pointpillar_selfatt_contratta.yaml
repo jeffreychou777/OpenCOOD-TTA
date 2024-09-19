@@ -1,17 +1,37 @@
-name: point_pillar_intermediate_fusion
+name: opv2v_point_pillar_lidar_selfatt_withnoise
 root_dir: "dataset/opv2v/train"
 validate_dir: "dataset/opv2v/validate"
+test_dir: "dataset/opv2v/test"
+
+noise_setting:
+  add_noise: True
+  args: 
+    pos_std: 0.4
+    rot_std: 0.4
+    pos_mean: 0
+    rot_mean: 0
 
 yaml_parser: "load_point_pillar_params"
 train_params:
   batch_size: &batch_size 1
-  epoches: 15
-  eval_freq: 1
-  save_freq: 1
+  epoches: 5
+  eval_freq: 2
+  save_freq: 2
+  max_cav: &max_cav 5
+
+input_source: ['lidar']
+label_type: 'lidar'
+
+comm_range: 70
 
 fusion:
-  core_method: 'IntermediateFusionDataset' # LateFusionDataset, EarlyFusionDataset, IntermediateFusionDataset supported
-  args: []
+  core_method: 'IntermediateFusionDatasetTTA' # LateFusionDataset, EarlyFusionDataset, IntermediateFusionDataset supported
+  args: 
+    same_data: false
+    full_data: true
+    flip_data: false
+    is_augment: false
+    ssl: True
 
 # preprocess-related
 preprocess:
@@ -38,14 +58,15 @@ data_augment:
 # anchor box related
 postprocess:
   core_method: 'VoxelPostprocessor' # VoxelPostprocessor, BevPostprocessor supported
+  gt_range: *cav_lidar
   anchor_args:
     cav_lidar_range: *cav_lidar
     l: 3.9
     w: 1.6
     h: 1.56
-    r: [0, 90]
-    feature_stride: 2
-    num: &achor_num 2
+    r: &anchor_yaw [0, 90]
+    feature_stride: 4
+    num: &anchor_num 2
   target_args:
     pos_threshold: 0.6
     neg_threshold: 0.45
@@ -53,15 +74,21 @@ postprocess:
   order: 'hwl' # hwl or lwh
   max_num: 100 # maximum number of objects in a single frame. use this number to make sure different frames has the same dimension in the same batch
   nms_thresh: 0.15
+  dir_args: &dir_args
+    dir_offset: 0.7853
+    num_bins: 2
+    anchor_yaw: *anchor_yaw
 
 # model related
 model:
-  core_method: point_pillar_intermediate
+  core_method: point_pillar_intermediate_maetta
   args:
     voxel_size: *voxel_size
     lidar_range: *cav_lidar
-    anchor_number: *achor_num
+    anchor_number: *anchor_num
 
+    momentum: 0.8
+    saved_path: '/home/zjf/DATACENTER2/data/code/OpenCOOD-TTA/opencood/logs/clean_train'
     pillar_vfe:
       use_norm: true
       with_distance: false
@@ -70,25 +97,26 @@ model:
     point_pillar_scatter:
       num_features: 64
 
-    base_bev_backbone:
+    base_bev_backbone: # backbone will downsample 2x
+      voxel_size: *voxel_size
       layer_nums: [3, 5, 8]
       layer_strides: [2, 2, 2]
       num_filters: [64, 128, 256]
       upsample_strides: [1, 2, 4]
       num_upsample_filter: [128, 128, 128]
-      compression: 0
 
-    anchor_num: *achor_num
+
+    dir_args: *dir_args
 
 loss:
-  core_method: point_pillar_loss
+  core_method: contrastive_learning_loss
   args:
-    cls_weight: 1.0
-    reg: 2.0
-
+    tau: 0.1
+    max_voxel: 30
+    
 optimizer:
   core_method: Adam
-  lr: 0.002
+  lr: 0.001
   args:
     eps: 1e-10
     weight_decay: 1e-4
