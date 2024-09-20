@@ -91,8 +91,10 @@ class IntermediateFusionDatasetTTA(basedataset.BaseDataset):
         infra = []
         spatial_correction_matrix = []
 
+        split_lengths = []
         # loop over all CAVs to process information
         for cav_id, selected_cav_base in base_data_dict.items():
+
             # check if the cav is within the communication range with ego
             distance = math.sqrt(
                 (selected_cav_base["params"]["lidar_pose"][0] - ego_lidar_pose[0]) ** 2
@@ -110,6 +112,7 @@ class IntermediateFusionDatasetTTA(basedataset.BaseDataset):
             object_stack.append(selected_cav_processed["object_bbx_center"])
             object_id_stack += selected_cav_processed["object_ids"]
 
+            split_lengths.append(len(selected_cav_processed["projected_lidar"]))
             projected_lidar_stack.append(selected_cav_processed["projected_lidar"])
             
             velocity.append(selected_cav_processed['velocity'])
@@ -150,7 +153,9 @@ class IntermediateFusionDatasetTTA(basedataset.BaseDataset):
         projected_lidar = mask_points_by_range(
             projected_lidar, self.params["preprocess"]["cav_lidar_range"]
         )
-        projected_lidar_list = projected_lidar.tolist()
+        
+        projected_lidar_list = np.split(projected_lidar, np.cumsum(split_lengths)[:-1])
+       
 
         scenario_folder=scenario_path.split('/')[-2]
         scenario_timeStamp=scenario_path.split('/')[-1]
@@ -186,7 +191,7 @@ class IntermediateFusionDatasetTTA(basedataset.BaseDataset):
         print(666666666)
         processed_lidar = []
         for projected_lidar in projected_lidar_list:
-            processed_lidar.append(self.pre_processor.preprocess([projected_lidar]))
+            processed_lidar.append(self.pre_processor.preprocess(projected_lidar))
         # processed_lidar = self.pre_processor.preprocess(projected_lidar_list)
         print(7777777777777)
         cav_num = len(processed_lidar)

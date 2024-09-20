@@ -88,7 +88,7 @@ model:
     anchor_number: *anchor_num
 
     momentum: 0.8
-    saved_path: '/home/zjf/DATACENTER2/data/code/OpenCOOD-TTA/opencood/logs/clean_train'
+    saved_path: '/home/junfei.zhou/DATACENTER2/data/code/OpenCOOD-TTA/opencood/logs/clean_train'
     pillar_vfe:
       use_norm: true
       with_distance: false
