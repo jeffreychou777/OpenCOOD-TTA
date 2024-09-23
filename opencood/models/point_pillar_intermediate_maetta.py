@@ -90,8 +90,8 @@ class PointPillarIntermediateMaetta(nn.Module):
         psm = self.cls_head(spatial_features_2d)
         rm = self.reg_head(spatial_features_2d)
 
-        output_dict = {'fused_feature_org': spatial_features_2d,
-                       'fused_feature_rec': spatial_features_2d_masked,
+        output_dict = {'fused_feature_student': spatial_features_2d,
+                       'fused_feature_teacher': spatial_features_2d_masked,
                        'psm': psm,
                        'rm': rm,
                        }

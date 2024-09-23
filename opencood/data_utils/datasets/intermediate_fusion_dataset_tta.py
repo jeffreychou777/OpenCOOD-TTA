@@ -166,19 +166,14 @@ class IntermediateFusionDatasetTTA(basedataset.BaseDataset):
                 os.path.join(seg_path + ".seg"), dtype=np.float16
             )
             segments = segments.reshape((-1, 4))
-            print("----------------")
         else:
             print(f'create {seg_path} seg')
             # n,1
-            print(1111111111111)
             segments = clusterize_pcd(projected_lidar)
             # n,5
-            print(2222222222222222222)
             segments=np.concatenate((projected_lidar,segments),axis=1)
             # m,4
-            print(3333333333333333)
             segments=self.transform_to_bounding_boxes(segments)
-            print(4444444444444444444)
             assert (
                 segments.max() < np.finfo("float16").max
             ), "max segment id overflow float16 number"
@@ -188,24 +183,26 @@ class IntermediateFusionDatasetTTA(basedataset.BaseDataset):
             segments.tofile(os.path.join(seg_path + ".seg"))
 
         # pre-process the lidar to voxel/bev/downsampled lidar
-        print(666666666)
         processed_lidar = []
         for projected_lidar in projected_lidar_list:
             processed_lidar.append(self.pre_processor.preprocess(projected_lidar))
         # processed_lidar = self.pre_processor.preprocess(projected_lidar_list)
-        print(7777777777777)
+
         cav_num = len(processed_lidar)
         merged_feature_dict = self.merge_features_to_dict(processed_lidar)
         
         
         # generate the anchor boxes
         anchor_box = self.post_processor.generate_anchor_box()
-        print(8888888888888888)
+
         # generate targets label
+        label_dict = self.post_processor.generate_label(
+            gt_box_center=object_bbx_center, anchors=anchor_box, mask=mask
+        )
         label_dict = self.post_processor.generate_pos_region_rangesv2(
             gt_box_center=segments, label_dict=label_dict
         )
-        print(9999999999999999)
+        
         # pad dv, dt, infra to max_cav
         velocity = velocity + (self.max_cav - len(velocity)) * [0.]
         time_delay = time_delay + (self.max_cav - len(time_delay)) * [0.]
@@ -215,8 +212,6 @@ class IntermediateFusionDatasetTTA(basedataset.BaseDataset):
                                                spatial_correction_matrix),1,1))
         spatial_correction_matrix = np.concatenate([spatial_correction_matrix,
                                                    padding_eye], axis=0)
-
-        print(0000000000000000000000)
         processed_data_dict["ego"].update(
             {
                 "object_bbx_center": object_bbx_center,

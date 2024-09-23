@@ -44,7 +44,7 @@ postprocess:
     w: 1.6
     h: 1.56
     r: [0, 90]
-    feature_stride: 2
+    feature_stride: 4
     num: &achor_num 2
   target_args:
     pos_threshold: 0.6

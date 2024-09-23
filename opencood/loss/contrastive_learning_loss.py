@@ -18,8 +18,8 @@ class ContrastiveLearningLoss(nn.Module):
         target_dict : dict
         """
         # b,c,h,w
-        features_q = output_dict["features_q"]
-        features_k = output_dict["features_k"]
+        features_q = output_dict["fused_feature_teacher"]
+        features_k = output_dict["fused_feature_student"]
         # (B,max_num,h,w)
         mask = target_dict["pos_region_ranges"]
 

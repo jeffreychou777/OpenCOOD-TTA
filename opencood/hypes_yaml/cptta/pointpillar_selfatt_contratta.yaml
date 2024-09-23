@@ -14,9 +14,9 @@ noise_setting:
 yaml_parser: "load_point_pillar_params"
 train_params:
   batch_size: &batch_size 1
-  epoches: 5
-  eval_freq: 2
-  save_freq: 2
+  epoches: 1
+  eval_freq: 1
+  save_freq: 1
   max_cav: &max_cav 5
 
 input_source: ['lidar']
@@ -63,9 +63,9 @@ postprocess:
     cav_lidar_range: *cav_lidar
     l: 3.9
     w: 1.6
-    h: 1.56
+    h: 1.5
     r: &anchor_yaw [0, 90]
-    feature_stride: 4
+    feature_stride: 2 
     num: &anchor_num 2
   target_args:
     pos_threshold: 0.6
@@ -88,7 +88,7 @@ model:
     anchor_number: *anchor_num
 
     momentum: 0.8
-    saved_path: '/home/junfei.zhou/DATACENTER2/data/code/OpenCOOD-TTA/opencood/logs/clean_train'
+    saved_path: '/home/zjf/DATACENTER2/data/code/OpenCOOD-TTA/opencood/logs/clean_train'
     pillar_vfe:
       use_norm: true
       with_distance: false
